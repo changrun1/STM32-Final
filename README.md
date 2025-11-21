@@ -24,11 +24,11 @@ A Chrome dinosaur-inspired running game implementation for STM32F1 microcontroll
 
 ## Game Mechanics
 
-- Press the button to jump over cacti
+- Press the button to jump over cactus
 - Score increases as you survive longer
 - Game speed increases with higher scores
 - Collision ends the game
-- Multiple obstacle types (big/small cacti)
+- Multiple obstacle types (big/small cactus)
 
 ## Project Structure
 
