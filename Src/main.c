@@ -187,7 +187,7 @@ int main(void)
       if (frameCount % 100 == 0) {  // Spawn every 100 frames (~2 seconds at 50 FPS)
         for (int i = 0; i < MAX_OBSTACLES; i++) {
           if (!obstacles[i].active) {
-            obstacles[i].x = GROUND_PAGE - 1;  // One page above ground
+            obstacles[i].x = GROUND_PAGE - 2;  // 2 page above ground
             obstacles[i].y = 120;  // Start from right side
             obstacles[i].type = 1;  // Always use small cactus
             obstacles[i].active = 1;
@@ -383,7 +383,7 @@ void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 7200;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 200;  // ~20ms per frame (50 FPS) for smooth animation
+  htim1.Init.Period = 100;  // ~10ms per frame (100 FPS) for smoother animation
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   HAL_TIM_Base_Init(&htim1);
