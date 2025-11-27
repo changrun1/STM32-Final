@@ -98,6 +98,7 @@ void initGameState(DinoGameState *state) {
     state->animFrame = 0;
     state->jumpHeight = 0;
     state->isJumping = 0;
+    state->jumpHangCounter = 0;
     state->score = 0;
     state->gameSpeed = GAME_SPEED_DELAY;
 }
@@ -141,8 +142,12 @@ void handleJump(DinoGameState *state) {
             state->jumpHeight++;
             state->dinoX--;  // Move up one page
         } else {
-            // Start coming down
-            state->isJumping = 0;
+            // At peak - hang in the air for a few frames
+            state->jumpHangCounter++;
+            if (state->jumpHangCounter >= JUMP_HANG_TIME) {
+                state->isJumping = 0;
+                state->jumpHangCounter = 0;
+            }
         }
     } else if (state->jumpHeight > 0) {
         // Coming down

@@ -45,6 +45,7 @@
 #define GROUND_PAGE          6    // The page/row where ground is drawn
 #define DINO_GROUND_Y        64   // Dino's Y position when on ground
 #define JUMP_MAX_HEIGHT      3    // Maximum jump height in pages
+#define JUMP_HANG_TIME       8    // Frames to stay at jump peak (makes jump longer)
 #define GAME_SPEED_DELAY     100  // Obstacle movement speed in ms (lower = faster, 60-150 recommended)
 
 // Game state and animation variables
@@ -55,6 +56,7 @@ typedef struct {
     unsigned char animFrame;      // Animation frame counter
     unsigned char jumpHeight;     // Current jump height
     unsigned char isJumping;      // Jump state flag
+    unsigned char jumpHangCounter; // Counter for hang time at peak
     unsigned int score;           // Current game score
     unsigned char gameSpeed;      // Current game speed
 } DinoGameState;
