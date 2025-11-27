@@ -51,7 +51,8 @@ This project is designed for STM32 development environments (STM32CubeIDE, Keil,
 
 - Modify `BUTTON_PIN` and `BUTTON_PORT` for your button configuration
 - Adjust `MAX_OBSTACLES` for difficulty
-- Change `GAME_SPEED_DELAY` for game speed
+- Change `OBSTACLE_SPEED` for game speed (lower = faster)
+- Adjust `JUMP_HANG_TIME` for jump duration
 
 ---
 

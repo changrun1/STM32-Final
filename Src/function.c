@@ -100,7 +100,6 @@ void initGameState(DinoGameState *state) {
     state->isJumping = 0;
     state->jumpHangCounter = 0;
     state->score = 0;
-    state->gameSpeed = GAME_SPEED_DELAY;
 }
 
 // Draw the dino at current state position

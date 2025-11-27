@@ -30,7 +30,7 @@
   * - Change BUTTON_PIN and BUTTON_PORT in USER CODE BEGIN 0 section
   * - Adjust MAX_OBSTACLES for more/fewer obstacles
   * - Modify obstacle spawn rate in frameCount check
-  * - Change game speed in GAME_SPEED_DELAY (function.h)
+  * - Change game speed with OBSTACLE_SPEED in function.h
   * 
   ******************************************************************************
   * @attention
@@ -196,13 +196,9 @@ int main(void)
         }
       }
       
-      // Update and draw obstacles every few frames based on GAME_SPEED_DELAY
-      // At 50 FPS (20ms/frame), GAME_SPEED_DELAY=100 means move every 5 frames
+      // Update and draw obstacles at fixed speed
       obstacleFrameCounter++;
-      unsigned char framesPerMove = (GAME_SPEED_DELAY + 10) / 20;  // Round: 100ms -> 5 frames, 60ms -> 3 frames
-      if (framesPerMove < 1) framesPerMove = 1;  // Minimum 1 frame
-      
-      if (obstacleFrameCounter >= framesPerMove) {
+      if (obstacleFrameCounter >= OBSTACLE_SPEED) {
         obstacleFrameCounter = 0;
         
         for (int i = 0; i < MAX_OBSTACLES; i++) {
@@ -245,8 +241,8 @@ int main(void)
         }
       }
       
-      // Increase game difficulty over time (not implemented yet)
-      // Can adjust GAME_SPEED_DELAY dynamically if needed
+      // Increase game difficulty over time (not implemented)
+      // Can decrease OBSTACLE_SPEED dynamically to make it faster
       
       // Wait for timer interrupt to trigger next frame
       while (!gameTimerFlag) {
