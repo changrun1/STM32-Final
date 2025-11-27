@@ -189,16 +189,20 @@ int main(void)
           if (!obstacles[i].active) {
             obstacles[i].x = GROUND_PAGE - 2;
             obstacles[i].y = 120;  // Start from right side
-            obstacles[i].type = (frameCount % 200 == 0) ? 1 : 0;  // Alternate obstacle types
+            obstacles[i].type = 1;  // Always use small cactus
             obstacles[i].active = 1;
             break;
           }
         }
       }
       
-      // Update and draw obstacles (slower than dino animation)
+      // Update and draw obstacles every few frames based on GAME_SPEED_DELAY
+      // At 50 FPS (20ms/frame), GAME_SPEED_DELAY=100 means move every 5 frames
       obstacleFrameCounter++;
-      if (obstacleFrameCounter >= (GAME_SPEED_DELAY / 20)) {  // Move obstacles based on GAME_SPEED_DELAY
+      unsigned char framesPerMove = (GAME_SPEED_DELAY + 10) / 20;  // Round: 100ms -> 5 frames, 60ms -> 3 frames
+      if (framesPerMove < 1) framesPerMove = 1;  // Minimum 1 frame
+      
+      if (obstacleFrameCounter >= framesPerMove) {
         obstacleFrameCounter = 0;
         
         for (int i = 0; i < MAX_OBSTACLES; i++) {

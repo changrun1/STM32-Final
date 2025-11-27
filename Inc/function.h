@@ -45,7 +45,7 @@
 #define GROUND_PAGE          6    // The page/row where ground is drawn
 #define DINO_GROUND_Y        64   // Dino's Y position when on ground
 #define JUMP_MAX_HEIGHT      3    // Maximum jump height in pages
-#define GAME_SPEED_DELAY     100  // Base game speed in ms
+#define GAME_SPEED_DELAY     100  // Obstacle movement speed in ms (lower = faster, 60-150 recommended)
 
 // Game state and animation variables
 typedef struct {
