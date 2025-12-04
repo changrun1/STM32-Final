@@ -292,8 +292,8 @@ int main(void)
               printf("\r\n=== GAME OVER ===\r\n");
               printf("Final Score: %d\r\n", game.score);
               
-              // Redraw dino at collision position so screen doesn't look blank
-              drawDino(&game);
+              // Draw dead dino sprite at collision position
+              drawDinoDead(&game);
               
               drawEndScreen();  // Show END text
             }

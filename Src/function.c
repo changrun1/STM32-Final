@@ -110,6 +110,14 @@ void drawDino(DinoGameState *state) {
     LCD_DrawString(state->dinoX, state->dinoY, sprite, 2);
 }
 
+// Draw dead dino sprite at current position
+void drawDinoDead(DinoGameState *state) {
+    unsigned char sprite[2];
+    sprite[0] = SPRITE_DINO_DEAD;      // Index 131
+    sprite[1] = SPRITE_DINO_DEAD + 1;  // Index 132
+    LCD_DrawString(state->dinoX, state->dinoY, sprite, 2);
+}
+
 // Update dino animation frame
 void updateDinoAnimation(DinoGameState *state) {
     state->animFrame++;
