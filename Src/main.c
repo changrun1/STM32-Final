@@ -122,6 +122,13 @@ unsigned int getRandomSpawnInterval(void) {
   return OBSTACLE_SPAWN_MIN + (randomSeed % (OBSTACLE_SPAWN_MAX - OBSTACLE_SPAWN_MIN + 1));
 }
 
+unsigned char getRandomObstacleType(void) {
+  // Update random seed
+  randomSeed = (randomSeed * 1103515245 + 12345) & 0x7FFFFFFF;
+  // 50% chance for big cactus (type 0), 50% for small cactus (type 1)
+  return (randomSeed % 2);
+}
+
 /* USER CODE END 0 */
 
 int main(void)
@@ -249,7 +256,7 @@ int main(void)
           if (!obstacles[i].active) {
             obstacles[i].x = GROUND_PAGE - 2;  // 2 page above ground
             obstacles[i].y = 120;  // Start from right side
-            obstacles[i].type = 1;  // Always use small cactus
+            obstacles[i].type = getRandomObstacleType();  // Random: 0=big, 1=small cactus
             obstacles[i].active = 1;
             // Set next spawn time with random interval
             nextObstacleSpawn = frameCount + getRandomSpawnInterval();
