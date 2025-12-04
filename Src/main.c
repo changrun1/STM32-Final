@@ -188,8 +188,8 @@ int main(void)
   clearStartScreen();
   LCD_Clear();
   drawGroundLine(0);
-  drawCloud(0, 20);   // Static cloud decoration at top
-  drawCloud(0, 90);   // Another cloud at top
+  drawStar(0, 20);   // Static star decoration at top
+  drawStar(0, 90);   // Another star at top
   
   unsigned int frameCount = 0;
   unsigned int obstacleFrameCounter = 0;
@@ -350,8 +350,8 @@ int main(void)
         clearStartScreen();
         LCD_Clear();
         drawGroundLine(0);
-        drawCloud(0, 20);
-        drawCloud(0, 90);
+        drawStar(0, 20);
+        drawStar(0, 90);
         frameCount = 0;
         gameOver = 0;
       }

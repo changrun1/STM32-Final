@@ -20,7 +20,7 @@
  * - SPRITE_DINO_DUCK_1   (131-132): Dino ducking pose
  * - SPRITE_CACTUS_BIG    (120-121): Large cactus obstacle
  * - SPRITE_CACTUS_SMALL  (122):     Small cactus obstacle
- * - SPRITE_CLOUD         (123-124): Cloud decoration
+ * - SPRITE_STAR          (123-124): Star decoration
  * - SPRITE_BIRD_FLY_1    (134-135): Flying bird animation frame 1
  * - SPRITE_BIRD_FLY_2    (136-137): Flying bird animation frame 2
  * - SPRITE_GROUND_LINE   (133):     Ground line decoration
@@ -154,9 +154,9 @@ void drawCactus(unsigned char x, unsigned char y, unsigned char type) {
     }
 }
 
-// Draw a cloud decoration
-void drawCloud(unsigned char x, unsigned char y) {
-    unsigned char sprite[2] = {SPRITE_CLOUD, SPRITE_CLOUD + 1};
+// Draw a star decoration
+void drawStar(unsigned char x, unsigned char y) {
+    unsigned char sprite[2] = {SPRITE_STAR, SPRITE_STAR + 1};
     LCD_DrawString(x, y, sprite, 2);
 }
 
