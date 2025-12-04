@@ -204,12 +204,15 @@ int main(void)
       // Clear old dino position
       clearSprite(game.dinoX, game.dinoY, 2);
       
-      // Check for button press (jump)
+      // Check for button press (jump) - level triggered
       GPIO_PinState buttonState = HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN);
       if (buttonState == GPIO_PIN_SET) {
+        game.buttonHeld = 1;  // Track button is being held
         if (!game.isJumping && game.jumpHeight == 0) {
           game.isJumping = 1;
         }
+      } else {
+        game.buttonHeld = 0;  // Button released
       }
       
       // Update dino physics

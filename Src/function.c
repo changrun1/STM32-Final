@@ -79,6 +79,7 @@ void initGameState(DinoGameState *state) {
     state->jumpHeight = 0;
     state->isJumping = 0;
     state->jumpHangCounter = 0;
+    state->buttonHeld = 0;  // Button not held initially
     state->lives = 1;  // Default 1 life
     state->score = 0;
     state->currentSpeed = OBSTACLE_SPEED_INIT;  // Start with initial speed
@@ -117,7 +118,8 @@ void updateDinoAnimation(DinoGameState *state) {
     }
 }
 
-// Handle jump mechanics
+// Handle jump mechanics with level-triggered hang time
+// Holding button longer at peak increases hang time (up to max)
 void handleJump(DinoGameState *state) {
     if (state->isJumping) {
         // Going up
@@ -125,9 +127,15 @@ void handleJump(DinoGameState *state) {
             state->jumpHeight++;
             state->dinoX--;  // Move up one page
         } else {
-            // At peak - hang in the air for a few frames
+            // At peak - hang in the air
             state->jumpHangCounter++;
-            if (state->jumpHangCounter >= JUMP_HANG_TIME) {
+            
+            // Determine hang time based on button state
+            // If button held, allow hanging up to max time
+            // If button released, use minimum hang time
+            unsigned char hangTimeLimit = state->buttonHeld ? JUMP_HANG_TIME_MAX : JUMP_HANG_TIME_MIN;
+            
+            if (state->jumpHangCounter >= hangTimeLimit) {
                 state->isJumping = 0;
                 state->jumpHangCounter = 0;
             }
