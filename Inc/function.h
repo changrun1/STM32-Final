@@ -59,7 +59,7 @@
 #define TIMER_SPEED_STEP     5    // How much to decrease period each speed increase
 
 // Obstacle spawn interval constants (frames between spawns)
-#define OBSTACLE_SPAWN_MIN   30   // Minimum frames between obstacle spawns
+#define OBSTACLE_SPAWN_MIN   40   // Minimum frames between obstacle spawns
 #define OBSTACLE_SPAWN_MAX   100  // Maximum frames between obstacle spawns
 
 // Game state and animation variables

@@ -97,7 +97,7 @@ void drawDino(DinoGameState *state) {
         sprite[1] = SPRITE_DINO_STAND + 1;  // Index 126
     } else {
         // Alternate between run frames for running animation
-        if (state->animFrame % 20 < 10) {
+        if (state->animFrame % 8 < 4) {
             sprite[0] = SPRITE_DINO_RUN;      // Index 127
             sprite[1] = SPRITE_DINO_RUN + 1;  // Index 128
         } else {
