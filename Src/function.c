@@ -86,7 +86,7 @@ void initGameState(DinoGameState *state) {
     state->speedTimer = 0;  // Reset speed timer
 }
 
-// Draw the dino at current state position
+// Draw the dino at current state position (uses frame buffer)
 void drawDino(DinoGameState *state) {
     unsigned char sprite[2];  // Array for 16x16 sprite (2 chars wide)
     
@@ -106,16 +106,16 @@ void drawDino(DinoGameState *state) {
         }
     }
     
-    // Draw the dino (16x16 sprite using 2 consecutive 8x16 chars)
-    LCD_DrawString(state->dinoX, state->dinoY, sprite, 2);
+    // Draw the dino to frame buffer (16x16 sprite using 2 consecutive 8x16 chars)
+    LCD_Buffer_DrawString(state->dinoX, state->dinoY, sprite, 2);
 }
 
-// Draw dead dino sprite at current position
+// Draw dead dino sprite at current position (uses frame buffer)
 void drawDinoDead(DinoGameState *state) {
     unsigned char sprite[2];
     sprite[0] = SPRITE_DINO_DEAD;      // Index 131
     sprite[1] = SPRITE_DINO_DEAD + 1;  // Index 132
-    LCD_DrawString(state->dinoX, state->dinoY, sprite, 2);
+    LCD_Buffer_DrawString(state->dinoX, state->dinoY, sprite, 2);
 }
 
 // Update dino animation frame
@@ -155,63 +155,60 @@ void handleJump(DinoGameState *state) {
     }
 }
 
-// Draw a cactus obstacle
+// Draw a cactus obstacle (uses frame buffer)
 void drawCactus(unsigned char x, unsigned char y, unsigned char type) {
     unsigned char sprite[2];
     if (type == 0) {
         // Big cactus (16x16)
         sprite[0] = SPRITE_CACTUS_BIG;
         sprite[1] = SPRITE_CACTUS_BIG + 1;
-        LCD_DrawString(x, y, sprite, 2);
+        LCD_Buffer_DrawString(x, y, sprite, 2);
     } else {
         // Small cactus (8x16)
         sprite[0] = SPRITE_CACTUS_SMALL;
-        LCD_DrawString(x, y, sprite, 1);
+        LCD_Buffer_DrawString(x, y, sprite, 1);
     }
 }
 
-// Draw a star decoration
+// Draw a star decoration (uses frame buffer)
 void drawStar(unsigned char x, unsigned char y) {
     unsigned char sprite[2] = {SPRITE_STAR, SPRITE_STAR + 1};
-    LCD_DrawString(x, y, sprite, 2);
+    LCD_Buffer_DrawString(x, y, sprite, 2);
 }
 
-// Draw a moon decoration
+// Draw a moon decoration (uses frame buffer)
 void drawMoon(unsigned char x, unsigned char y) {
     unsigned char sprite[2] = {SPRITE_MOON, SPRITE_MOON + 1};
-    LCD_DrawString(x, y, sprite, 2);
+    LCD_Buffer_DrawString(x, y, sprite, 2);
 }
 
-// Draw ground line
+// Draw ground line (uses frame buffer)
 void drawGroundLine(unsigned char y) {
     // Draw a continuous line across the entire width at GROUND_PAGE
     // Use SPRITE_GROUND_LINE (132) which has the line in the bottom byte
     unsigned char sprite[1] = {SPRITE_GROUND_LINE};
     for (unsigned char i = 0; i < 16; i++) {  // 128 pixels / 8 = 16 sprites
-        LCD_DrawString(GROUND_PAGE, i * 8, sprite, 1);
+        LCD_Buffer_DrawString(GROUND_PAGE, i * 8, sprite, 1);
     }
 }
 
-// Clear a sprite area by drawing blank characters
+// Clear a sprite area in frame buffer
 void clearSprite(unsigned char x, unsigned char y, unsigned char width) {
-    // Draw blank characters to clear the area
-    unsigned char blank[1] = {22};  // Index 22 is blank in ChineseTable
-    for (unsigned char i = 0; i < width; i++) {
-        LCD_DrawString(x, y + (i * 8), blank, 1);
-    }
+    // Clear area in frame buffer
+    LCD_Buffer_ClearArea(x, y, width);
 }
 
-// Update obstacle position (move left)
+// Update obstacle position (move left) - uses frame buffer
 void updateObstacle(Obstacle *obs) {
     if (obs->active) {
         if (obs->y > 0) {
-            // Clear old position
-            clearSprite(obs->x, obs->y, 2);
+            // Clear old position in buffer
+            LCD_Buffer_ClearArea(obs->x, obs->y, 2);
             
             // Move left
             obs->y -= 8;
             
-            // Draw at new position
+            // Draw at new position in buffer
             if (obs->type == 0 || obs->type == 1) {
                 drawCactus(obs->x, obs->y, obs->type);
             }
@@ -222,7 +219,7 @@ void updateObstacle(Obstacle *obs) {
     }
 }
 
-// Draw score using number sprites
+// Draw score using number sprites (uses frame buffer)
 void drawScore(unsigned int score, unsigned char x, unsigned char y) {
     // Convert score to digits and draw
     unsigned char digits[5];
@@ -240,42 +237,40 @@ void drawScore(unsigned int score, unsigned char x, unsigned char y) {
         }
     }
     
-    // Draw digits (reversed order)
+    // Draw digits (reversed order) to frame buffer
     for (int i = numDigits - 1; i >= 0; i--) {
         unsigned char digitSprite[1] = {digits[i]};
-        LCD_DrawString(x, y + ((numDigits - 1 - i) * 8), digitSprite, 1);
+        LCD_Buffer_DrawString(x, y + ((numDigits - 1 - i) * 8), digitSprite, 1);
     }
 }
 
-// Draw "START" text in the middle of the LCD
+// Draw "START" text in the middle of the LCD (uses frame buffer)
 // ChineseTable indices: S=74, T=75, A=56, R=73, T=75
 void drawStartScreen(void) {
     // "START" = 5 characters, each 8 pixels wide = 40 pixels
     // LCD is 128 pixels wide, center at (128-40)/2 = 44
     // Middle page is 3 or 4 (LCD has pages 0-7)
     unsigned char startText[5] = {74, 75, 56, 73, 75};  // S, T, A, R, T
-    LCD_DrawString(3, 44, startText, 5);
+    LCD_Buffer_DrawString(3, 44, startText, 5);
 }
 
-// Clear the START text from the screen
+// Clear the START text from the screen (uses frame buffer)
 void clearStartScreen(void) {
-    unsigned char blank[5] = {22, 22, 22, 22, 22};  // Index 22 is blank
-    LCD_DrawString(3, 44, blank, 5);
+    LCD_Buffer_ClearArea(3, 44, 5);
 }
 
-// Draw "END" text in the middle of the LCD
+// Draw "END" text in the middle of the LCD (uses frame buffer)
 // ChineseTable indices: E=60, N=69, D=59
 void drawEndScreen(void) {
     // "END" = 3 characters, each 8 pixels wide = 24 pixels
     // LCD is 128 pixels wide, center at (128-24)/2 = 52
     unsigned char endText[3] = {60, 69, 59};  // E, N, D
-    LCD_DrawString(3, 52, endText, 3);
+    LCD_Buffer_DrawString(3, 52, endText, 3);
 }
 
-// Clear the END text from the screen
+// Clear the END text from the screen (uses frame buffer)
 void clearEndScreen(void) {
-    unsigned char blank[3] = {22, 22, 22};  // Index 22 is blank
-    LCD_DrawString(3, 52, blank, 3);
+    LCD_Buffer_ClearArea(3, 52, 3);
 }
 
 // Update LEDs to show number of lives (1-4)

@@ -144,17 +144,18 @@ int main(void)
   MX_TIM1_Init();
   LCD_Init();
   LCD_Clear();
+  LCD_InitFrameBuffer();  // Initialize frame buffer system
 	
 	/* Check TIM Init----------------------------------------------------------*/
 	if (HAL_TIM_Base_Start_IT(&htim1) != HAL_OK)
   {
     /* Initialization Error */
-    printf("Timer Broken");
+    // printf("Timer Broken");
   }
   
 	/* Output a message on Hyperterminal using printf function */
-  printf("\n\r UART Printf Example: retarget the C library printf function to the UART\n\r");
-  printf("** Test finished successfully. ** \n\r");
+  // printf("\n\r UART Printf Example: retarget the C library printf function to the UART\n\r");
+  // printf("** Test finished successfully. ** \n\r");
 
 	/* -------------------------------MAIN PROGRAM-----------------------------*/
   
@@ -169,6 +170,7 @@ int main(void)
   
   // ===== START SCREEN: Select lives using ADC =====
   drawStartScreen();
+  LCD_SwapBuffers();  // Flush start screen to LCD
   unsigned char selectedLives = 1;
   updateLivesLED(selectedLives);
   
@@ -209,15 +211,16 @@ int main(void)
   HAL_ADC_Stop(&hadc1);
   nextObstacleSpawn = 10;  // First obstacle spawns quickly after game start
   
-  printf("\r\n=== GAME START ===\r\n");
-  printf("Lives: %d\r\n", game.lives);
+  // printf("\r\n=== GAME START ===\r\n");
+  // printf("Lives: %d\r\n", game.lives);
   
   // Clear start screen and draw game elements
   clearStartScreen();
-  LCD_Clear();
+  LCD_ClearBuffer();  // Clear frame buffer for new game
   drawGroundLine(0);
   drawStar(0, 20);   // Static star decoration at top
   drawMoon(0, 90);   // Moon decoration at top
+  LCD_FlushBuffer(); // Initial full flush for static elements
   
   unsigned int frameCount = 0;
   unsigned int obstacleFrameCounter = 0;
@@ -287,7 +290,7 @@ int main(void)
               obstacles[i].active = 0;
               // Increase score and print to UART
               game.score++;
-              printf("Score: %d\r\n", game.score);
+              // printf("Score: %d\r\n", game.score);
             }
           }
         }
@@ -307,7 +310,7 @@ int main(void)
           if (horizontalOverlap && verticalOverlap) {
             // Collision! Lose a life
             game.lives--;
-            printf("Hit! Lives remaining: %d\r\n", game.lives);
+            // printf("Hit! Lives remaining: %d\r\n", game.lives);
             updateLivesLED(game.lives);
             
             // Deactivate the obstacle that hit us
@@ -317,13 +320,14 @@ int main(void)
             if (game.lives == 0) {
               // No more lives - Game Over
               gameOver = 1;
-              printf("\r\n=== GAME OVER ===\r\n");
-              printf("Final Score: %d\r\n", game.score);
+              // printf("\r\n=== GAME OVER ===\r\n");
+              // printf("Final Score: %d\r\n", game.score);
               
               // Draw dead dino sprite at collision position
               drawDinoDead(&game);
               
               drawEndScreen();  // Show END text
+              LCD_SwapBuffers(); // Flush game over screen
             }
             break;
           }
@@ -335,6 +339,9 @@ int main(void)
       
       // Increase game difficulty over time using PWM
       updateGameSpeed(&game);
+      
+      // ===== DOUBLE BUFFER: Swap and flush only changed pixels =====
+      LCD_SwapBuffers();
       
       // Wait for timer interrupt to trigger next frame
       while (!gameTimerFlag) {
@@ -351,6 +358,7 @@ int main(void)
         // Restart game - go back to start screen
         clearEndScreen();  // Clear END text
         LCD_Clear();
+        LCD_InitFrameBuffer();  // Reset frame buffers
         initGameState(&game);
         for (int i = 0; i < MAX_OBSTACLES; i++) {
           obstacles[i].active = 0;
@@ -358,6 +366,7 @@ int main(void)
         
         // Show start screen again to select lives
         drawStartScreen();
+        LCD_SwapBuffers();  // Flush start screen
         unsigned char selectedLives = 1;
         updateLivesLED(selectedLives);
         
@@ -384,17 +393,18 @@ int main(void)
         
         HAL_Delay(200);  // Debounce
         game.lives = selectedLives;
-        printf("\r\n=== GAME RESTART ===\r\n");
-        printf("Lives: %d\r\n", game.lives);
+        // printf("\r\n=== GAME RESTART ===\r\n");
+        // printf("Lives: %d\r\n", game.lives);
         
         // Reset timer period to initial speed
         __HAL_TIM_SET_AUTORELOAD(&htim1, TIMER_PERIOD_INIT);
         
         clearStartScreen();
-        LCD_Clear();
+        LCD_ClearBuffer();  // Clear frame buffer for new game
         drawGroundLine(0);
         drawStar(0, 20);
         drawMoon(0, 90);
+        LCD_FlushBuffer();  // Initial full flush for static elements
         frameCount = 0;
         nextObstacleSpawn = 10;  // First obstacle spawns quickly after restart
         gameOver = 0;
@@ -508,13 +518,12 @@ void MX_TIM1_Init(void)
 {
 
   TIM_ClockConfigTypeDef sClockSourceConfig;
-  TIM_SlaveConfigTypeDef sSlaveConfig;
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 7200;
+  htim1.Init.Prescaler = 799;  // 8MHz / 800 = 10kHz tick rate
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = TIMER_PERIOD_INIT;  // Initial ~10ms per frame, decreases over time for speed increase
+  htim1.Init.Period = TIMER_PERIOD_INIT;  // 10kHz / 100 = 100Hz = 10ms per frame
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   HAL_TIM_Base_Init(&htim1);
@@ -522,10 +531,7 @@ void MX_TIM1_Init(void)
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
   HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig);
 
-  sSlaveConfig.SlaveMode = TIM_SLAVEMODE_TRIGGER;
-  sSlaveConfig.InputTrigger = TIM_TS_ITR0;
-  HAL_TIM_SlaveConfigSynchronization(&htim1, &sSlaveConfig);
-
+  // Remove slave mode - run independently
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig);

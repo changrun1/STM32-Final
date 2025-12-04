@@ -1667,3 +1667,311 @@ void LCD_Init(void)
 
   LCD_Draw_ST_Logo();
 }
+
+// ============================================================================
+// DOUBLE BUFFERING SYSTEM IMPLEMENTATION
+// ============================================================================
+// Frame buffers - 128x64 LCD = 8 pages x 128 columns = 1024 bytes
+unsigned char frameBuffer[LCD_BUFFER_SIZE];      // Current frame (write here)
+unsigned char backBuffer[LCD_BUFFER_SIZE];       // Previous frame (for comparison)
+unsigned char dirtyPages[LCD_PAGES];             // Which pages need to be redrawn
+
+/*******************************************************************************
+* Function Name  : LCD_InitFrameBuffer
+* Description    : Initialize frame buffers to zero
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void LCD_InitFrameBuffer(void)
+{
+  unsigned int i;
+  for (i = 0; i < LCD_BUFFER_SIZE; i++) {
+    frameBuffer[i] = 0;
+    backBuffer[i] = 0;
+  }
+  for (i = 0; i < LCD_PAGES; i++) {
+    dirtyPages[i] = 0;
+  }
+}
+
+/*******************************************************************************
+* Function Name  : LCD_ClearBuffer
+* Description    : Clear current frame buffer
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void LCD_ClearBuffer(void)
+{
+  unsigned int i;
+  for (i = 0; i < LCD_BUFFER_SIZE; i++) {
+    frameBuffer[i] = 0;
+  }
+  // Mark all pages dirty since we cleared
+  for (i = 0; i < LCD_PAGES; i++) {
+    dirtyPages[i] = 1;
+  }
+}
+
+/*******************************************************************************
+* Function Name  : LCD_MarkDirty
+* Description    : Mark a specific page as needing update
+* Input          : page -- page number (0-7)
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void LCD_MarkDirty(unsigned char page)
+{
+  if (page < LCD_PAGES) {
+    dirtyPages[page] = 1;
+  }
+}
+
+/*******************************************************************************
+* Function Name  : LCD_MarkDirtyRegion
+* Description    : Mark multiple pages as needing update
+* Input          : startPage, endPage -- page range (inclusive)
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void LCD_MarkDirtyRegion(unsigned char startPage, unsigned char endPage)
+{
+  unsigned char i;
+  if (startPage > endPage) {
+    unsigned char temp = startPage;
+    startPage = endPage;
+    endPage = temp;
+  }
+  if (endPage >= LCD_PAGES) endPage = LCD_PAGES - 1;
+  for (i = startPage; i <= endPage; i++) {
+    dirtyPages[i] = 1;
+  }
+}
+
+/*******************************************************************************
+* Function Name  : LCD_SwapBuffers
+* Description    : Compare frame buffer with back buffer and only update changed
+*                  columns. This is the key optimization - only sends data for
+*                  pixels that actually changed.
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void LCD_SwapBuffers(void)
+{
+  unsigned char page, col;
+  unsigned int offset;
+  unsigned char col_high, col_low;
+  unsigned char needsUpdate;
+  unsigned char startCol, endCol;
+  
+  for (page = 0; page < LCD_PAGES; page++) {
+    // Skip pages that aren't dirty
+    if (!dirtyPages[page]) continue;
+    
+    // Find dirty columns within this page by comparing buffers
+    startCol = 255;  // Invalid value to detect "not found"
+    endCol = 0;
+    
+    for (col = 0; col < LCD_WIDTH; col++) {
+      offset = (unsigned int)page * LCD_WIDTH + col;
+      if (frameBuffer[offset] != backBuffer[offset]) {
+        if (startCol == 255) startCol = col;
+        endCol = col;
+      }
+    }
+    
+    // If no changes in this page, skip it
+    if (startCol == 255) {
+      dirtyPages[page] = 0;
+      continue;
+    }
+    
+    // Set page address once
+    LCD_Command = Set_Start_Line_X | 0x0;
+    LCD_Command = Set_Page_Addr_X | page;
+    
+    // Process dirty columns in batches for efficiency
+    col = startCol;
+    while (col <= endCol) {
+      // Find start of dirty region
+      offset = (unsigned int)page * LCD_WIDTH + col;
+      while (col <= endCol && frameBuffer[offset] == backBuffer[offset]) {
+        col++;
+        offset++;
+      }
+      
+      if (col > endCol) break;
+      
+      // Set column address for this region
+      col_high = col >> 4;
+      col_low = col & 0x0F;
+      LCD_Command = Set_ColH_Addr_X | col_high;
+      LCD_Command = Set_ColL_Addr_X | col_low;
+      
+      // Write consecutive dirty bytes
+      offset = (unsigned int)page * LCD_WIDTH + col;
+      while (col <= endCol && frameBuffer[offset] != backBuffer[offset]) {
+        LCD_Data = frameBuffer[offset];
+        backBuffer[offset] = frameBuffer[offset];  // Update back buffer
+        col++;
+        offset++;
+      }
+    }
+    
+    // Clear dirty flag for this page
+    dirtyPages[page] = 0;
+  }
+}
+
+/*******************************************************************************
+* Function Name  : LCD_FlushBuffer
+* Description    : Force flush entire frame buffer to LCD (use sparingly)
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void LCD_FlushBuffer(void)
+{
+  unsigned char page, col;
+  unsigned int offset;
+  
+  LCD_Command = Set_Start_Line_X | 0x0;
+  
+  for (page = 0; page < LCD_PAGES; page++) {
+    LCD_Command = Set_Page_Addr_X | page;
+    LCD_Command = Set_ColH_Addr_X | 0x0;
+    LCD_Command = Set_ColL_Addr_X | 0x0;
+    
+    offset = (unsigned int)page * LCD_WIDTH;
+    for (col = 0; col < LCD_WIDTH; col++) {
+      LCD_Data = frameBuffer[offset + col];
+      backBuffer[offset + col] = frameBuffer[offset + col];
+    }
+    
+    dirtyPages[page] = 0;
+  }
+}
+
+/*******************************************************************************
+* Function Name  : LCD_Buffer_SetByte
+* Description    : Set a byte in the frame buffer at specific page/column
+* Input          : page -- page number (0-7)
+*                  col -- column position (0-127)
+*                  data -- byte to write
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void LCD_Buffer_SetByte(unsigned char page, unsigned char col, unsigned char data)
+{
+  unsigned int offset;
+  if (page >= LCD_PAGES || col >= LCD_WIDTH) return;
+  
+  offset = (unsigned int)page * LCD_WIDTH + col;
+  if (frameBuffer[offset] != data) {
+    frameBuffer[offset] = data;
+    dirtyPages[page] = 1;
+  }
+}
+
+/*******************************************************************************
+* Function Name  : LCD_Buffer_DrawChar
+* Description    : Draw a character to the frame buffer (not directly to LCD)
+*                  Character is 8x16, so it spans 2 pages vertically
+* Input          : Xpage -- page position (0-6, since char is 2 pages tall)
+*                  YCol -- column position (0-127)
+*                  offset -- index in ChineseTable
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void LCD_Buffer_DrawChar(unsigned char Xpage, unsigned char YCol, unsigned char offset)
+{
+  unsigned char i;
+  unsigned int bufOffset;
+  unsigned char *c = ChineseTable[0] + 16 * offset;
+  
+  if (Xpage >= LCD_PAGES - 1 || YCol > LCD_WIDTH - 8) return;
+  
+  // First 8 bytes go to first page
+  bufOffset = (unsigned int)Xpage * LCD_WIDTH + YCol;
+  for (i = 0; i < 8; i++) {
+    if (frameBuffer[bufOffset + i] != c[i]) {
+      frameBuffer[bufOffset + i] = c[i];
+      dirtyPages[Xpage] = 1;
+    }
+  }
+  
+  // Next 8 bytes go to second page
+  bufOffset = (unsigned int)(Xpage + 1) * LCD_WIDTH + YCol;
+  for (i = 0; i < 8; i++) {
+    if (frameBuffer[bufOffset + i] != c[8 + i]) {
+      frameBuffer[bufOffset + i] = c[8 + i];
+      dirtyPages[Xpage + 1] = 1;
+    }
+  }
+}
+
+/*******************************************************************************
+* Function Name  : LCD_Buffer_DrawString
+* Description    : Draw a string to the frame buffer
+* Input          : Xpage -- page position
+*                  YCol -- column position
+*                  c -- pointer to character indices array
+*                  length -- number of characters
+* Output         : None
+* Return         : 0 -- failure, 1 -- success
+*******************************************************************************/
+unsigned char LCD_Buffer_DrawString(unsigned char Xpage, unsigned char YCol, unsigned char *c, unsigned char length)
+{
+  unsigned char len = length;
+  unsigned char* pOffset = c;
+  
+  if ((LCD_WIDTH - YCol) < 8 * length)
+    return 0;
+  
+  while (len--) {
+    LCD_Buffer_DrawChar(Xpage, YCol, *pOffset);
+    YCol += 8;
+    pOffset++;
+  }
+  return 1;
+}
+
+/*******************************************************************************
+* Function Name  : LCD_Buffer_ClearArea
+* Description    : Clear an area in the frame buffer
+* Input          : page -- starting page (clears this and next page for 16x sprite)
+*                  col -- starting column
+*                  width -- width in columns (8 per character)
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void LCD_Buffer_ClearArea(unsigned char page, unsigned char col, unsigned char width)
+{
+  unsigned char i;
+  unsigned int bufOffset;
+  
+  if (page >= LCD_PAGES || col >= LCD_WIDTH) return;
+  if (col + width * 8 > LCD_WIDTH) width = (LCD_WIDTH - col) / 8;
+  
+  // Clear first page
+  bufOffset = (unsigned int)page * LCD_WIDTH + col;
+  for (i = 0; i < width * 8 && (col + i) < LCD_WIDTH; i++) {
+    if (frameBuffer[bufOffset + i] != 0) {
+      frameBuffer[bufOffset + i] = 0;
+      dirtyPages[page] = 1;
+    }
+  }
+  
+  // Clear second page if valid
+  if (page + 1 < LCD_PAGES) {
+    bufOffset = (unsigned int)(page + 1) * LCD_WIDTH + col;
+    for (i = 0; i < width * 8 && (col + i) < LCD_WIDTH; i++) {
+      if (frameBuffer[bufOffset + i] != 0) {
+        frameBuffer[bufOffset + i] = 0;
+        dirtyPages[page + 1] = 1;
+      }
+    }
+  }
+}

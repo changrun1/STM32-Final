@@ -147,4 +147,32 @@ unsigned char LCD_DrawTriangle(unsigned char x0, unsigned char y0, unsigned char
 unsigned char LCD_FillTriangle(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2, unsigned char state);
 unsigned char LCD_SetArea(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2, unsigned char state);
 
+// ============================================================================
+// DOUBLE BUFFERING SYSTEM - Frame Buffer with Dirty Rectangle Tracking
+// ============================================================================
+// LCD Resolution: 128x64 pixels = 8 pages x 128 columns = 1024 bytes per buffer
+#define LCD_WIDTH       128
+#define LCD_HEIGHT      64
+#define LCD_PAGES       8
+#define LCD_BUFFER_SIZE (LCD_PAGES * LCD_WIDTH)  // 1024 bytes
+
+// Frame buffer pointers (defined in lcd.c)
+extern unsigned char frameBuffer[LCD_BUFFER_SIZE];      // Current frame buffer
+extern unsigned char backBuffer[LCD_BUFFER_SIZE];       // Previous frame for comparison
+extern unsigned char dirtyPages[LCD_PAGES];             // Track which pages need update
+
+// Double buffer functions
+void LCD_InitFrameBuffer(void);                         // Initialize frame buffers
+void LCD_ClearBuffer(void);                             // Clear current frame buffer
+void LCD_SwapBuffers(void);                             // Swap and flush only dirty regions
+void LCD_FlushBuffer(void);                             // Force flush entire buffer to LCD
+void LCD_MarkDirty(unsigned char page);                 // Mark a page as dirty
+void LCD_MarkDirtyRegion(unsigned char startPage, unsigned char endPage);  // Mark multiple pages
+
+// Buffered drawing functions (draw to frame buffer, not LCD directly)
+void LCD_Buffer_DrawChar(unsigned char Xpage, unsigned char YCol, unsigned char offset);
+unsigned char LCD_Buffer_DrawString(unsigned char Xpage, unsigned char YCol, unsigned char *c, unsigned char length);
+void LCD_Buffer_ClearArea(unsigned char page, unsigned char col, unsigned char width);
+void LCD_Buffer_SetByte(unsigned char page, unsigned char col, unsigned char data);
+
 #endif /* __LCD_H */

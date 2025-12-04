@@ -54,9 +54,10 @@
 #define SPEED_INCREASE_RATE  150  // Frames between speed increases
 
 // PWM Timer period constants (lower = faster game)
-#define TIMER_PERIOD_INIT    100  // Initial timer period (~10ms)
-#define TIMER_PERIOD_MIN     40   // Minimum timer period (~4ms, fastest)
-#define TIMER_SPEED_STEP     5    // How much to decrease period each speed increase
+// Timer tick = 10kHz, so period 100 = 100Hz (10ms/frame)
+#define TIMER_PERIOD_INIT    100  // Initial: 10ms per frame = 100 FPS target
+#define TIMER_PERIOD_MIN     50   // Minimum: 5ms per frame = 200 FPS max
+#define TIMER_SPEED_STEP     2    // How much to decrease period each speed increase
 
 // Obstacle spawn interval constants (frames between spawns)
 #define OBSTACLE_SPAWN_MIN   40   // Minimum frames between obstacle spawns
