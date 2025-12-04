@@ -108,17 +108,18 @@ void drawDino(DinoGameState *state) {
     unsigned char sprite[2];  // Array for 16x16 sprite (2 chars wide)
     
     // Select sprite based on state
+    // 16x16 sprites use 2 consecutive indices (e.g., 125 and 126)
     if (state->isJumping) {
-        sprite[0] = SPRITE_DINO_STAND;      // First 8x16 part
-        sprite[1] = SPRITE_DINO_STAND + 1;  // Second 8x16 part
+        sprite[0] = SPRITE_DINO_STAND;      // Index 125
+        sprite[1] = SPRITE_DINO_STAND + 1;  // Index 126
     } else {
         // Alternate between run frames for running animation
         if (state->animFrame % 20 < 10) {
-            sprite[0] = SPRITE_DINO_RUN;
-            sprite[1] = SPRITE_DINO_RUN + 1;
+            sprite[0] = SPRITE_DINO_RUN;      // Index 127
+            sprite[1] = SPRITE_DINO_RUN + 1;  // Index 128
         } else {
-            sprite[0] = SPRITE_DINO_RUN_2;
-            sprite[1] = SPRITE_DINO_RUN_2 + 1;
+            sprite[0] = SPRITE_DINO_RUN_2;      // Index 133
+            sprite[1] = SPRITE_DINO_RUN_2 + 1;  // Index 134
         }
     }
     
