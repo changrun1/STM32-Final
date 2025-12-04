@@ -233,7 +233,7 @@ int main(void)
       // Clear old dino position
       clearSprite(game.dinoX, game.dinoY, 2);
       
-      // Check for button press (jump) - level triggered
+      // Check for button press (jump) - level triggered (every frame for responsiveness)
       GPIO_PinState buttonState = HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN);
       if (buttonState == GPIO_PIN_SET) {
         game.buttonHeld = 1;  // Track button is being held
@@ -244,11 +244,19 @@ int main(void)
         game.buttonHeld = 0;  // Button released
       }
       
-      // Update dino physics
-      handleJump(&game);
+      // Update physics at controlled rate (not every frame)
+      game.physicsTimer++;
+      if (game.physicsTimer >= JUMP_PHYSICS_SPEED) {
+        game.physicsTimer = 0;
+        handleJump(&game);
+      }
       
-      // Update animation
-      updateDinoAnimation(&game);
+      // Update animation at controlled rate
+      game.animTimer++;
+      if (game.animTimer >= DINO_ANIM_SPEED) {
+        game.animTimer = 0;
+        updateDinoAnimation(&game);
+      }
       
       // Draw dino at new position
       drawDino(&game);

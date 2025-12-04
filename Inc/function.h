@@ -40,28 +40,33 @@
 #define SPRITE_DINO_RUN_2    129  // Dino running frame 2 (16x16) - indices 129-130
 #define SPRITE_DINO_DEAD     131  // Dino dead sprite (16x16) - indices 131-132
 #define SPRITE_CLEAR         133  // Clear sprite (16x16) - indices 133-134
-#define SPRITE_GROUND_LINE   136  // Ground line (8x16) - index 136 has the line pixels
+#define SPRITE_GROUND_LINE   135  // Ground line (16x16) - indices 135-136
+#define SPRITE_BIRD_FLY      137  // Flying bird (16x16) - indices 137-138
 #define SPRITE_MOON          139  // Moon decoration (16x16) - indices 139-140
 
 // Game constants
 #define GROUND_PAGE          7    // The page/row where ground is drawn (bottom of LCD)
 #define DINO_GROUND_Y        64   // Dino's Y position when on ground
 #define JUMP_MAX_HEIGHT      3    // Maximum jump height in pages
-#define JUMP_HANG_TIME_MIN   8    // Normal hang time at jump peak (when button released)
-#define JUMP_HANG_TIME_MAX   20   // Maximum hang time at jump peak (when button held)
-#define OBSTACLE_SPEED_INIT  5    // Initial frames between obstacle movements (higher = slower)
-#define OBSTACLE_SPEED_MIN   1    // Minimum obstacle speed (fastest)
-#define SPEED_INCREASE_RATE  150  // Frames between speed increases
+#define JUMP_HANG_TIME_MIN   12   // Normal hang time at jump peak (when button released)
+#define JUMP_HANG_TIME_MAX   30   // Maximum hang time at jump peak (when button held)
+#define OBSTACLE_SPEED_INIT  8    // Initial frames between obstacle movements (higher = slower)
+#define OBSTACLE_SPEED_MIN   2    // Minimum obstacle speed (fastest)
+#define SPEED_INCREASE_RATE  300  // Frames between speed increases (longer = slower difficulty ramp)
 
-// PWM Timer period constants (lower = faster game)
+// PWM Timer period constants (lower = faster frame rate)
 // Timer tick = 10kHz, so period 100 = 100Hz (10ms/frame)
-#define TIMER_PERIOD_INIT    100  // Initial: 10ms per frame = 100 FPS target
-#define TIMER_PERIOD_MIN     50   // Minimum: 5ms per frame = 200 FPS max
+#define TIMER_PERIOD_INIT    150  // Initial: 15ms per frame ≈ 66 FPS
+#define TIMER_PERIOD_MIN     80   // Minimum: 8ms per frame ≈ 125 FPS max
 #define TIMER_SPEED_STEP     2    // How much to decrease period each speed increase
 
 // Obstacle spawn interval constants (frames between spawns)
-#define OBSTACLE_SPAWN_MIN   40   // Minimum frames between obstacle spawns
-#define OBSTACLE_SPAWN_MAX   100  // Maximum frames between obstacle spawns
+#define OBSTACLE_SPAWN_MIN   60   // Minimum frames between obstacle spawns
+#define OBSTACLE_SPAWN_MAX   150  // Maximum frames between obstacle spawns
+
+// Animation speed (frames between animation updates)
+#define DINO_ANIM_SPEED      4    // Update dino animation every N frames
+#define JUMP_PHYSICS_SPEED   3    // Update jump physics every N frames
 
 // Game state and animation variables
 typedef struct {
@@ -77,6 +82,8 @@ typedef struct {
     unsigned int score;           // Current game score
     unsigned char currentSpeed;   // Current obstacle speed (frames between moves)
     unsigned int speedTimer;      // Timer for speed increases
+    unsigned char animTimer;      // Timer for animation updates
+    unsigned char physicsTimer;   // Timer for physics updates
 } DinoGameState;
 
 // Obstacle structure

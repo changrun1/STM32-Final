@@ -72,7 +72,7 @@
 
 // Initialize game state
 void initGameState(DinoGameState *state) {
-    state->dinoX = GROUND_PAGE - 2; // Start 2 page above ground (page 6)
+    state->dinoX = GROUND_PAGE - 2; // Start 2 page above ground (page 5)
     state->dinoY = 8;  // Leftmost position
     state->dinoState = 0;  // Running
     state->animFrame = 0;
@@ -84,6 +84,8 @@ void initGameState(DinoGameState *state) {
     state->score = 0;
     state->currentSpeed = OBSTACLE_SPEED_INIT;  // Start with initial speed
     state->speedTimer = 0;  // Reset speed timer
+    state->animTimer = 0;   // Reset animation timer
+    state->physicsTimer = 0; // Reset physics timer
 }
 
 // Draw the dino at current state position (uses frame buffer)
@@ -183,12 +185,12 @@ void drawMoon(unsigned char x, unsigned char y) {
 }
 
 // Draw ground line (uses frame buffer)
+// Draw a simple horizontal line at the top of GROUND_PAGE (page 7)
 void drawGroundLine(unsigned char y) {
-    // Draw a continuous line across the entire width at GROUND_PAGE
-    // Use SPRITE_GROUND_LINE (132) which has the line in the bottom byte
-    unsigned char sprite[1] = {SPRITE_GROUND_LINE};
-    for (unsigned char i = 0; i < 16; i++) {  // 128 pixels / 8 = 16 sprites
-        LCD_Buffer_DrawString(GROUND_PAGE, i * 8, sprite, 1);
+    // Draw ground line directly to buffer - a single pixel line at top of page 7
+    // Byte value 0x01 = bit 0 set = top pixel of the page
+    for (unsigned char col = 0; col < LCD_WIDTH; col++) {
+        LCD_Buffer_SetByte(GROUND_PAGE, col, 0x01);  // Top pixel line
     }
 }
 
