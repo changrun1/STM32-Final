@@ -102,7 +102,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN 0 */
 
 // Game variables
-#define MAX_OBSTACLES 3
+#define MAX_OBSTACLES 1  // Single obstacle, evenly spaced spawning
 #define BUTTON_PIN GPIO_PIN_0  // Change to your actual button pin
 #define BUTTON_PORT GPIOA      // Change to your actual button port
 
@@ -183,6 +183,8 @@ int main(void)
   // Button pressed - start the game
   HAL_Delay(200);  // Debounce
   game.lives = selectedLives;
+  printf("\r\n=== GAME START ===\r\n");
+  printf("Lives: %d\r\n", game.lives);
   
   // Clear start screen and draw game elements
   clearStartScreen();
@@ -252,8 +254,9 @@ int main(void)
             } else {
               // Obstacle moved off screen
               obstacles[i].active = 0;
-              // Increase score
+              // Increase score and print to UART
               game.score++;
+              printf("Score: %d\r\n", game.score);
             }
           }
         }
@@ -273,6 +276,7 @@ int main(void)
           if (horizontalOverlap && verticalOverlap) {
             // Collision! Lose a life
             game.lives--;
+            printf("Hit! Lives remaining: %d\r\n", game.lives);
             updateLivesLED(game.lives);
             
             // Deactivate the obstacle that hit us
@@ -282,6 +286,8 @@ int main(void)
             if (game.lives == 0) {
               // No more lives - Game Over
               gameOver = 1;
+              printf("\r\n=== GAME OVER ===\r\n");
+              printf("Final Score: %d\r\n", game.score);
               drawEndScreen();  // Show END text
             }
             break;
@@ -343,6 +349,8 @@ int main(void)
         
         HAL_Delay(200);  // Debounce
         game.lives = selectedLives;
+        printf("\r\n=== GAME RESTART ===\r\n");
+        printf("Lives: %d\r\n", game.lives);
         
         // Reset timer period to initial speed
         __HAL_TIM_SET_AUTORELOAD(&htim1, TIMER_PERIOD_INIT);
