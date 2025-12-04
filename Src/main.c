@@ -111,6 +111,16 @@ extern volatile unsigned char gameTimerFlag;
 
 Obstacle obstacles[MAX_OBSTACLES];
 unsigned char obstacleSpawnCounter = 0;
+unsigned int nextObstacleSpawn = 100;  // Frame count for next spawn
+
+// Simple pseudo-random number generator
+unsigned int randomSeed = 12345;
+unsigned int getRandomSpawnInterval(void) {
+  // Linear congruential generator for pseudo-random numbers
+  randomSeed = (randomSeed * 1103515245 + 12345) & 0x7FFFFFFF;
+  // Map to range [OBSTACLE_SPAWN_MIN, OBSTACLE_SPAWN_MAX]
+  return OBSTACLE_SPAWN_MIN + (randomSeed % (OBSTACLE_SPAWN_MAX - OBSTACLE_SPAWN_MIN + 1));
+}
 
 /* USER CODE END 0 */
 
@@ -183,6 +193,14 @@ int main(void)
   // Button pressed - start the game
   HAL_Delay(200);  // Debounce
   game.lives = selectedLives;
+  
+  // Seed random generator with ADC value for varied gameplay
+  HAL_ADC_Start(&hadc1);
+  HAL_ADC_PollForConversion(&hadc1, 100);
+  randomSeed = HAL_ADC_GetValue(&hadc1) + HAL_GetTick();
+  HAL_ADC_Stop(&hadc1);
+  nextObstacleSpawn = getRandomSpawnInterval();  // Set initial random spawn time
+  
   printf("\r\n=== GAME START ===\r\n");
   printf("Lives: %d\r\n", game.lives);
   
@@ -224,15 +242,17 @@ int main(void)
       // Draw dino at new position
       drawDino(&game);
       
-      // Spawn obstacles periodically
+      // Spawn obstacles with random spacing
       frameCount++;
-      if (frameCount % 100 == 0) {  // Spawn every 100 frames (~2 seconds at 50 FPS)
+      if (frameCount >= nextObstacleSpawn) {
         for (int i = 0; i < MAX_OBSTACLES; i++) {
           if (!obstacles[i].active) {
             obstacles[i].x = GROUND_PAGE - 2;  // 2 page above ground
             obstacles[i].y = 120;  // Start from right side
             obstacles[i].type = 1;  // Always use small cactus
             obstacles[i].active = 1;
+            // Set next spawn time with random interval
+            nextObstacleSpawn = frameCount + getRandomSpawnInterval();
             break;
           }
         }
@@ -368,6 +388,7 @@ int main(void)
         drawStar(0, 20);
         drawStar(0, 90);
         frameCount = 0;
+        nextObstacleSpawn = getRandomSpawnInterval();  // Reset spawn timing with random interval
         gameOver = 0;
       }
     }

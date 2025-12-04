@@ -50,12 +50,16 @@
 #define JUMP_HANG_TIME_MAX   20   // Maximum hang time at jump peak (when button held)
 #define OBSTACLE_SPEED_INIT  5    // Initial frames between obstacle movements (higher = slower)
 #define OBSTACLE_SPEED_MIN   1    // Minimum obstacle speed (fastest)
-#define SPEED_INCREASE_RATE  500  // Frames between speed increases
+#define SPEED_INCREASE_RATE  150  // Frames between speed increases
 
 // PWM Timer period constants (lower = faster game)
 #define TIMER_PERIOD_INIT    100  // Initial timer period (~10ms)
 #define TIMER_PERIOD_MIN     40   // Minimum timer period (~4ms, fastest)
 #define TIMER_SPEED_STEP     5    // How much to decrease period each speed increase
+
+// Obstacle spawn interval constants (frames between spawns)
+#define OBSTACLE_SPAWN_MIN   60   // Minimum frames between obstacle spawns
+#define OBSTACLE_SPAWN_MAX   150  // Maximum frames between obstacle spawns
 
 // Game state and animation variables
 typedef struct {
